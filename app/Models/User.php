@@ -17,7 +17,9 @@ class User extends Authenticatable
      */
     public const ROLE_ADMIN = 'Admin';
     public const ROLE_MANAGER = 'Manager';
+    public const ROLE_TEAM_LEAD = 'Team Lead';
     public const ROLE_AGENT = 'Agent';
+    public const ROLE_BEADER = 'Beader';
 
     /**
      * Available roles
@@ -27,7 +29,9 @@ class User extends Authenticatable
         return [
             self::ROLE_ADMIN => 'Administrator',
             self::ROLE_MANAGER => 'Manager',
+            self::ROLE_TEAM_LEAD => 'Team Lead',
             self::ROLE_AGENT => 'Agent',
+            self::ROLE_BEADER => 'Beader',
         ];
     }
 
@@ -59,12 +63,25 @@ class User extends Authenticatable
         return $this->role === self::ROLE_MANAGER;
     }
 
-    /**
-     * Check if user is Agent
-     */
     public function isAgent(): bool
     {
-        return $this->role === self::ROLE_AGENT;
+        return $this->role === self::ROLE_AGENT || $this->role === self::ROLE_BEADER;
+    }
+
+    /**
+     * Check if user is Team Lead
+     */
+    public function isTeamLead(): bool
+    {
+        return $this->role === self::ROLE_TEAM_LEAD;
+    }
+
+    /**
+     * Check if user is Beader
+     */
+    public function isBeader(): bool
+    {
+        return $this->role === self::ROLE_BEADER;
     }
 
     /**
@@ -88,7 +105,7 @@ class User extends Authenticatable
      */
     public function isManagement(): bool
     {
-        return $this->isAdmin() || $this->isManager();
+        return $this->isAdmin() || $this->isManager() || $this->isTeamLead();
     }
 
     /**

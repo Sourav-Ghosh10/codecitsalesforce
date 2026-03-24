@@ -22,6 +22,9 @@
                         <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Task / Meeting</th>
                         <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Category</th>
                         <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Related Client</th>
+                        @if(auth()->user()->isManagement())
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Assigned To</th>
+                        @endif
                         <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
                         <th class="px-6 py-4 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
                     </tr>
@@ -72,6 +75,14 @@
                                     <span class="text-sm text-gray-400 italic">General</span>
                                 @endif
                             </td>
+                            @if(auth()->user()->isManagement())
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-2">
+                                    <img src="https://ui-avatars.com/api/?name={{ urlencode($task->user->name) }}&background=6366f1&color=fff&size=32" alt="" class="w-6 h-6 rounded-full">
+                                    <span class="text-sm text-gray-600 dark:text-gray-300 font-medium">{{ $task->user->name }}</span>
+                                </div>
+                            </td>
+                            @endif
                             <td class="px-6 py-4">
                                 <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-tight {{ $priorityColors[$task->priority] ?? 'bg-gray-100 text-gray-700' }}">
                                     {{ $task->priority }}
@@ -110,7 +121,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="px-6 py-12 text-center">
+                            <td colspan="{{ auth()->user()->isManagement() ? 7 : 6 }}" class="px-6 py-12 text-center">
                                 <div class="flex flex-col items-center gap-3">
                                     <div class="w-12 h-12 bg-gray-100 dark:bg-slate-700/50 rounded-full flex items-center justify-center">
                                         <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

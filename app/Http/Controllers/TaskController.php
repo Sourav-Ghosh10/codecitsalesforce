@@ -12,8 +12,13 @@ class TaskController extends Controller
      */
     public function index()
     {
-        $tasks = Task::with('client')
-            ->where('user_id', auth()->id())
+        $user = auth()->user();
+        $isManagement = $user->isManagement();
+
+        $tasks = Task::with(['client', 'user'])
+            ->when(!$isManagement, function($query) use ($user) {
+                return $query->where('user_id', $user->id);
+            })
             ->orderBy('due_at', 'desc')
             ->paginate(20);
 
@@ -25,7 +30,16 @@ class TaskController extends Controller
      */
     public function create()
     {
-        $clients = \App\Models\Client::orderBy('full_name')->get();
+        $user = auth()->user();
+        $isManagement = $user->isManagement();
+
+        $clients = \App\Models\Client::query()
+            ->when(!$isManagement, function($query) use ($user) {
+                return $query->where('agent_id', $user->id);
+            })
+            ->orderBy('full_name')
+            ->get();
+
         return view('tasks.create', compact('clients'));
     }
 
@@ -63,7 +77,11 @@ class TaskController extends Controller
      */
     public function show(Task $task)
     {
-        //
+        if (auth()->user()->isAgent() && $task->user_id !== auth()->id()) {
+            abort(403, 'Unauthorized access to task.');
+        }
+
+        return view('tasks.show', compact('task'));
     }
 
     /**
@@ -71,7 +89,21 @@ class TaskController extends Controller
      */
     public function edit(Task $task)
     {
-        //
+        if (auth()->user()->isAgent() && $task->user_id !== auth()->id()) {
+            abort(403, 'Unauthorized access to task.');
+        }
+
+        $user = auth()->user();
+        $isManagement = $user->isManagement();
+
+        $clients = \App\Models\Client::query()
+            ->when(!$isManagement, function($query) use ($user) {
+                return $query->where('agent_id', $user->id);
+            })
+            ->orderBy('full_name')
+            ->get();
+
+        return view('tasks.edit', compact('task', 'clients'));
     }
 
     /**
@@ -79,6 +111,10 @@ class TaskController extends Controller
      */
     public function update(Request $request, Task $task)
     {
+        if (auth()->user()->isAgent() && $task->user_id !== auth()->id()) {
+            abort(403, 'Unauthorized access to task.');
+        }
+
         if ($request->has('is_completed')) {
             $task->update(['is_completed' => $request->is_completed]);
             return back()->with('success', 'Task status updated.');
@@ -104,6 +140,10 @@ class TaskController extends Controller
      */
     public function destroy(Task $task)
     {
+        if (auth()->user()->isAgent() && $task->user_id !== auth()->id()) {
+            abort(403, 'Unauthorized access to task.');
+        }
+
         $task->delete();
         return redirect()->route('tasks.index')->with('success', 'Task deleted successfully.');
     }

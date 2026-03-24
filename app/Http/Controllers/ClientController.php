@@ -14,10 +14,15 @@ class ClientController extends Controller
      */
     public function index(Request $request)
     {
+        $user = Auth::user();
+        $isManagement = $user->isManagement();
         $search = $request->get('search', '');
         $status = $request->get('status', '');
         
         $clients = Client::with(['agent', 'creator'])
+            ->when(!$isManagement, function ($query) use ($user) {
+                return $query->where('agent_id', $user->id);
+            })
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('full_name', 'like', "%{$search}%")
@@ -51,8 +56,14 @@ class ClientController extends Controller
             // Agents can only assign to themselves
             $agents = collect([$user]);
         } else {
-            // Admin and Manager can assign to any agent
-            $agents = User::whereIn('role', [User::ROLE_ADMIN, User::ROLE_MANAGER, User::ROLE_AGENT])->get();
+            // Admin, Manager and Team Lead can assign to any agent
+            $agents = User::whereIn('role', [
+                User::ROLE_ADMIN, 
+                User::ROLE_MANAGER, 
+                User::ROLE_TEAM_LEAD, 
+                User::ROLE_AGENT, 
+                User::ROLE_BEADER
+            ])->get();
         }
         
         return view('clients.create', compact('statuses', 'agents', 'user'));
@@ -116,6 +127,10 @@ class ClientController extends Controller
      */
     public function show(Client $client)
     {
+        if (Auth::user()->isAgent() && $client->agent_id !== Auth::id()) {
+            abort(403, 'Unauthorized access to client.');
+        }
+
         $client->load(['agent', 'creator', 'updater']);
         
         return view('clients.show', compact('client'));
@@ -126,6 +141,10 @@ class ClientController extends Controller
      */
     public function edit(Client $client)
     {
+        if (Auth::user()->isAgent() && $client->agent_id !== Auth::id()) {
+            abort(403, 'Unauthorized access to client.');
+        }
+
         $user = Auth::user();
         $statuses = Client::getStatuses();
         
@@ -134,8 +153,14 @@ class ClientController extends Controller
             // Agents can only assign to themselves
             $agents = collect([$user]);
         } else {
-            // Admin and Manager can assign to any agent
-            $agents = User::whereIn('role', [User::ROLE_ADMIN, User::ROLE_MANAGER, User::ROLE_AGENT])->get();
+            // Admin, Manager and Team Lead can assign to any agent
+            $agents = User::whereIn('role', [
+                User::ROLE_ADMIN, 
+                User::ROLE_MANAGER, 
+                User::ROLE_TEAM_LEAD, 
+                User::ROLE_AGENT, 
+                User::ROLE_BEADER
+            ])->get();
         }
         
         return view('clients.edit', compact('client', 'statuses', 'agents'));
@@ -146,6 +171,10 @@ class ClientController extends Controller
      */
     public function update(Request $request, Client $client)
     {
+        if (Auth::user()->isAgent() && $client->agent_id !== Auth::id()) {
+            abort(403, 'Unauthorized access to client.');
+        }
+
         $request->validate([
             'full_name' => ['required', 'string', 'max:255'],
             'phone' => ['required', 'string', 'max:20'],
@@ -189,6 +218,10 @@ class ClientController extends Controller
      */
     public function destroy(Client $client)
     {
+        if (Auth::user()->isAgent() && $client->agent_id !== Auth::id()) {
+            abort(403, 'Unauthorized access to client.');
+        }
+
         $client->delete();
 
         return redirect()->route('clients.index')->with('success', 'Client deleted successfully.');
@@ -199,10 +232,15 @@ class ClientController extends Controller
      */
     public function search(Request $request)
     {
+        $user = Auth::user();
+        $isManagement = $user->isManagement();
         $search = $request->get('search', '');
         $status = $request->get('status', '');
         
         $clients = Client::with(['agent', 'creator'])
+            ->when(!$isManagement, function ($query) use ($user) {
+                return $query->where('agent_id', $user->id);
+            })
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('full_name', 'like', "%{$search}%")
