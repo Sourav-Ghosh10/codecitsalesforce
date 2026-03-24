@@ -32,6 +32,9 @@ Route::middleware('auth')->group(function () {
     // Client Management - available to ALL roles (Admin, Manager, Agent)
     Route::resource('clients', \App\Http\Controllers\ClientController::class);
 
+    // Task Management
+    Route::resource('tasks', \App\Http\Controllers\TaskController::class);
+
     // Call Logs - nested under clients
     Route::get('/clients/{client}/call-logs', [CallLogController::class, 'clientIndex'])->name('clients.call-logs.index');
     Route::get('/clients/{client}/call-logs/create', [CallLogController::class, 'create'])->name('clients.call-logs.create');

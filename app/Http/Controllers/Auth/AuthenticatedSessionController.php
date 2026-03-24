@@ -28,6 +28,8 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        $request->session()->put('show_follow_up_popup', true);
+
         return redirect()->intended(route('dashboard', absolute: false));
     }
 

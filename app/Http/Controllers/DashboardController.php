@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CallLog;
 use App\Models\Client;
 use App\Models\User;
+use App\Models\Task;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -19,7 +21,43 @@ class DashboardController extends Controller
         // Get role-specific data
         $stats = $this->getDashboardStats($user);
         
-        return view('dashboard', compact('stats'));
+        // Fetch recent clients for the table (Follow-up scenario)
+        $isAgent = !$user->isAdmin() && !$user->isManager();
+        $recentClients = Client::query()
+            ->when($isAgent, fn($q) => $q->where('agent_id', $user->id))
+            ->with(['callLogs' => fn($q) => $q->latest()])
+            ->latest()
+            ->take(5)
+            ->get();
+            
+        // Fetch upcoming tasks (from today onwards)
+        $upcomingTasks = CallLog::whereDate('next_follow_up_date', '>=', today())
+            ->when($isAgent, fn($q) => $q->where('staff_member_id', $user->id))
+            ->with('client')
+            ->orderBy('next_follow_up_date', 'asc')
+            ->take(5)
+            ->get();
+            
+        // Fetch upcoming events/meetings (from the new tasks table)
+        $upcomingEvents = Task::where('user_id', $user->id)
+            ->whereDate('due_at', '>=', today())
+            ->where('is_completed', false)
+            ->orderBy('due_at', 'asc')
+            ->take(5)
+            ->get();
+            
+        // Check for follow-up popup
+        $showPopup = session()->pull('show_follow_up_popup', false);
+        $todayFollowUps = [];
+        
+        if ($showPopup) {
+            $todayFollowUps = CallLog::whereDate('next_follow_up_date', today())
+                ->where('staff_member_id', $user->id)
+                ->with('client')
+                ->get();
+        }
+        
+        return view('dashboard', compact('stats', 'todayFollowUps', 'recentClients', 'upcomingTasks', 'upcomingEvents'));
     }
 
     /**
@@ -27,39 +65,62 @@ class DashboardController extends Controller
      */
     private function getDashboardStats($user)
     {
-        if ($user->isAdmin()) {
-            // Admin sees all data
-            return [
-                'totalClients' => Client::count(),
-                'activeLeads' => Client::where('status', 'Lead')->count(),
-                'totalRevenue' => Client::count() * 5000, // Estimated revenue per client
-                'pendingTasks' => 24,
-                'clientsGrowth' => 12.5,
-                'leadsGrowth' => 8.2,
-                'revenueGrowth' => 23.1,
-            ];
-        } elseif ($user->isManager()) {
-            // Manager sees team data
-            return [
-                'totalClients' => Client::count(),
-                'activeLeads' => Client::where('status', 'Lead')->count(),
-                'totalRevenue' => Client::count() * 5000,
-                'pendingTasks' => 24,
-                'clientsGrowth' => 12.5,
-                'leadsGrowth' => 8.2,
-                'revenueGrowth' => 23.1,
-            ];
-        } else {
-            // Agent sees only their own clients
-            return [
-                'totalClients' => $user->clients()->count(),
-                'activeLeads' => $user->clients()->where('status', 'Lead')->count(),
-                'totalRevenue' => $user->clients()->count() * 5000,
-                'pendingTasks' => 24,
-                'clientsGrowth' => 5.2,
-                'leadsGrowth' => 3.1,
-                'revenueGrowth' => 10.5,
-            ];
+        $stats = [
+            'totalClients' => 0,
+            'activeLeads' => 0,
+            'callsToday' => 0,
+            'pendingTasks' => 0,
+            'clientsGrowth' => 12.5,
+            'leadsGrowth' => 8.2,
+            'callsGrowth' => 23.1,
+            'tasksGrowth' => -3.0,
+            'chartData' => [],
+        ];
+
+        $isAgent = !$user->isAdmin() && !$user->isManager();
+        $query = Client::query();
+
+        if ($isAgent) {
+            $query->where('agent_id', $user->id);
+            $stats['clientsGrowth'] = 5.2;
+            $stats['leadsGrowth'] = 3.1;
+            $stats['callsGrowth'] = 10.5;
         }
+
+        $stats['totalClients'] = (clone $query)->count();
+        $stats['activeLeads'] = (clone $query)->whereIn('status', ['New', 'Follow-up', 'In Progress'])->count();
+        
+        // Calls Today: Total calls logged today
+        if ($isAgent) {
+            $stats['callsToday'] = CallLog::where('staff_member_id', $user->id)
+                ->whereDate('call_start_time', today())->count();
+            $stats['pendingTasks'] = CallLog::where('staff_member_id', $user->id)
+                ->whereDate('next_follow_up_date', '>=', today())->count();
+        } else {
+            $stats['callsToday'] = CallLog::whereDate('call_start_time', today())->count();
+            $stats['pendingTasks'] = CallLog::whereDate('next_follow_up_date', '>=', today())->count();
+        }
+
+        // Generate chart data for last 6 months (based on call volume)
+        $months = [];
+        $values = [];
+        for ($i = 5; $i >= 0; $i--) {
+            $date = now()->subMonths($i);
+            $months[] = $date->format('M');
+            
+            $callQuery = CallLog::whereMonth('call_start_time', $date->month)
+                ->whereYear('call_start_time', $date->year);
+                
+            if ($isAgent) {
+                $callQuery->where('staff_member_id', $user->id);
+            }
+            
+            $values[] = $callQuery->count();
+        }
+        
+        $stats['chartMonths'] = $months;
+        $stats['chartValues'] = $values;
+
+        return $stats;
     }
 }
