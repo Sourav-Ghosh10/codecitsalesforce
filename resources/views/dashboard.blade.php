@@ -101,7 +101,9 @@
             </div>
             <h3 class="text-3xl font-bold text-gray-900 dark:text-white">{{ number_format($stats['callsToday'] ?? 0) }}
             </h3>
-            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Calls Today</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                Calls Today
+            </p>
             <div class="mt-4 h-1.5 bg-gray-100 dark:bg-slate-700 rounded-full overflow-hidden">
                 <div class="h-full bg-emerald-500 rounded-full" style="width: 45%"></div>
             </div>
