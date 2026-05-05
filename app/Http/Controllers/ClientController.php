@@ -16,8 +16,8 @@ class ClientController extends Controller
     {
         $user = Auth::user();
         $isManagement = $user->isManagement();
-        $search = $request->get('search', '');
-        $status = $request->get('status', '');
+        $search = $request->input('search', '');
+        $status = $request->input('status', '');
         
         $clients = Client::with(['agent', 'creator'])
             ->when(!$isManagement, function ($query) use ($user) {

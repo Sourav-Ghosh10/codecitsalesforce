@@ -11,19 +11,21 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tasks', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->foreignId('client_id')->nullable()->constrained()->onDelete('set null');
-            $table->string('title');
-            $table->text('description')->nullable();
-            $table->string('location')->nullable();
-            $table->string('category')->default('Task'); // e.g., 'Meeting', 'Call', 'Task'
-            $table->dateTime('due_at');
-            $table->boolean('is_completed')->default(false);
-            $table->string('priority')->default('Medium'); // 'Low', 'Medium', 'High'
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('tasks')) {
+            Schema::create('tasks', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('user_id')->constrained()->onDelete('cascade');
+                $table->foreignId('client_id')->nullable()->constrained()->onDelete('set null');
+                $table->string('title');
+                $table->text('description')->nullable();
+                $table->string('location')->nullable();
+                $table->string('category')->default('Task'); // e.g., 'Meeting', 'Call', 'Task'
+                $table->dateTime('due_at');
+                $table->boolean('is_completed')->default(false);
+                $table->string('priority')->default('Medium'); // 'Low', 'Medium', 'High'
+                $table->timestamps();
+            });
+        }
     }
 
     /**

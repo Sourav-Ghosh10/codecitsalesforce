@@ -67,6 +67,36 @@
                     <span class="font-medium">Clients</span>
                 </x-nav-link>
 
+                <div x-data="{ open: {{ request()->routeIs('projects.*') ? 'true' : 'false' }} }">
+                    <button @click="open = !open" 
+                        class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all duration-200 group {{ request()->routeIs('projects.*') ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-700/50 hover:text-gray-900 dark:hover:text-white' }}">
+                        <div class="flex items-center gap-3">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"></path>
+                            </svg>
+                            <span class="font-medium">Projects</span>
+                        </div>
+                        <svg class="w-4 h-4 transition-transform duration-200" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+
+                    <div x-show="open" x-transition:enter="transition ease-out duration-100" x-transition:enter-start="transform opacity-0 scale-95" x-transition:enter-end="transform opacity-100 scale-100" class="mt-1 ml-4 space-y-1">
+                        <x-nav-link :href="route('projects.index')" :active="request()->routeIs('projects.index')"
+                            class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm {{ request()->routeIs('projects.index') ? 'text-indigo-600 font-semibold' : 'text-gray-500 hover:text-gray-900 dark:text-slate-400 dark:hover:text-white' }}">
+                            <span>• List Projects</span>
+                        </x-nav-link>
+                        <x-nav-link :href="route('projects.settings')" :active="request()->routeIs('projects.settings')"
+                            class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm {{ request()->routeIs('projects.settings') ? 'text-indigo-600 font-semibold' : 'text-gray-500 hover:text-gray-900 dark:text-slate-400 dark:hover:text-white' }}">
+                            <span>• Settings</span>
+                        </x-nav-link>
+                        <x-nav-link :href="route('projects.invoices')" :active="request()->routeIs('projects.invoices')"
+                            class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm {{ request()->routeIs('projects.invoices') ? 'text-indigo-600 font-semibold' : 'text-gray-500 hover:text-gray-900 dark:text-slate-400 dark:hover:text-white' }}">
+                            <span>• Invoices</span>
+                        </x-nav-link>
+                    </div>
+                </div>
+
                 @auth
                     @if(Auth::user()->isManagement())
                     <div class="text-[10px] font-semibold text-gray-400 dark:text-slate-500 uppercase tracking-wider mb-3 px-3 mt-6">Management</div>
@@ -163,6 +193,36 @@
                         </svg>
                         <span class="font-medium">Clients</span>
                     </x-nav-link>
+
+                    <div x-data="{ open: {{ request()->routeIs('projects.*') ? 'true' : 'false' }} }">
+                        <button @click="open = !open" 
+                            class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl {{ request()->routeIs('projects.*') ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600' : 'text-gray-600 dark:text-slate-400' }}">
+                            <div class="flex items-center gap-3">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"></path>
+                                </svg>
+                                <span class="font-medium">Projects</span>
+                            </div>
+                            <svg class="w-4 h-4 transition-transform duration-200" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+
+                        <div x-show="open" class="mt-1 ml-4 space-y-1">
+                            <x-nav-link :href="route('projects.index')" :active="request()->routeIs('projects.index')"
+                                class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm {{ request()->routeIs('projects.index') ? 'text-indigo-600 font-semibold' : 'text-gray-500 dark:text-slate-400' }}">
+                                <span>• List Projects</span>
+                            </x-nav-link>
+                            <x-nav-link :href="route('projects.settings')" :active="request()->routeIs('projects.settings')"
+                                class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm {{ request()->routeIs('projects.settings') ? 'text-indigo-600 font-semibold' : 'text-gray-500 dark:text-slate-400' }}">
+                                <span>• Settings</span>
+                            </x-nav-link>
+                            <x-nav-link :href="route('projects.invoices')" :active="request()->routeIs('projects.invoices')"
+                                class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm {{ request()->routeIs('projects.invoices') ? 'text-indigo-600 font-semibold' : 'text-gray-500 dark:text-slate-400' }}">
+                                <span>• Invoices</span>
+                            </x-nav-link>
+                        </div>
+                    </div>
 
                     @auth
                         @if(Auth::user()->isManagement())

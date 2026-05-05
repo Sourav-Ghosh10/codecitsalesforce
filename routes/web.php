@@ -39,6 +39,17 @@ Route::middleware('auth')->group(function () {
     // Task Management
     Route::resource('tasks', \App\Http\Controllers\TaskController::class);
 
+    // Project Management
+    Route::get('/projects/settings', [\App\Http\Controllers\ProjectController::class, 'settings'])->name('projects.settings');
+    Route::post('/projects/settings', [\App\Http\Controllers\ProjectController::class, 'saveSettings'])->name('projects.settings.save');
+    Route::get('/projects/invoices', [\App\Http\Controllers\ProjectController::class, 'invoices'])->name('projects.invoices');
+    Route::get('/projects/invoices/{id}/download', [\App\Http\Controllers\ProjectController::class, 'downloadInvoice'])->name('projects.invoices.download');
+    Route::post('/projects/invoices/generate', [\App\Http\Controllers\ProjectController::class, 'generateInvoice'])->name('projects.invoices.generate');
+    Route::post('/projects/payments', [\App\Http\Controllers\ProjectController::class, 'storePayment'])->name('projects.payments.store');
+    Route::get('/projects/{project}/ledger', [\App\Http\Controllers\ProjectController::class, 'downloadLedger'])->name('projects.ledger');
+    Route::post('/projects/{project}/generate-invoice', [\App\Http\Controllers\ProjectController::class, 'generatePaymentInvoice'])->name('projects.generate-invoice');
+    Route::resource('projects', \App\Http\Controllers\ProjectController::class);
+
     // Call Logs - nested under clients
     Route::get('/clients/{client}/call-logs', [CallLogController::class, 'clientIndex'])->name('clients.call-logs.index');
     Route::get('/clients/{client}/call-logs/create', [CallLogController::class, 'create'])->name('clients.call-logs.create');
