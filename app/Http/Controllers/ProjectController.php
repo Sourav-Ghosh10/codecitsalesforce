@@ -765,7 +765,7 @@ class ProjectController extends Controller
             'invoice_type_label' => 'LEDGER BALANCE',
             'display_invoice_number' => null, // No invoice number
             'invoice_date' => null, // No invoice date
-            'due_date' => now()->addDays(14)->format('Y-m-d'), // Must be a due date
+            'due_date' => now()->format('Y-m-d'), // Must be a due date
             'place_of_supply' => 'West Bengal', // Place of supply
 
             'company_name' => $company['name'],

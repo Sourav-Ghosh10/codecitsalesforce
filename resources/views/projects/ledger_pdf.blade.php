@@ -1,4 +1,5 @@
 <html>
+
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <style>
@@ -334,7 +335,7 @@
             <td class="invoice-title-cell" style="width: 40%; vertical-align: top;">
                 <div class="tax-invoice-label">{{ $invoice_type_label ?? 'TAX INVOICE' }}</div>
                 @if(isset($display_invoice_number) && $display_invoice_number)
-                <div class="invoice-number-label">Invoice #: {{ $display_invoice_number }}</div>
+                    <div class="invoice-number-label">Invoice #: {{ $display_invoice_number }}</div>
                 @endif
             </td>
         </tr>
@@ -346,41 +347,49 @@
             <td style="width: 65%;">
                 <span class="section-label">Bill To:</span>
                 <div><strong>{{ $customer_name }}</strong></div>
-                @if($customer_company) <div>{{ $customer_company }}</div> @endif
+                @if($customer_company)
+                <div>{{ $customer_company }}</div> @endif
                 <div>{!! nl2br(e($customer_address)) !!}</div>
-                @if($customer_gst) <div>GSTIN: {{ $customer_gst }}</div> @endif
+                @if($customer_gst)
+                <div>GSTIN: {{ $customer_gst }}</div> @endif
             </td>
             <td class="invoice-details-cell" style="width: 35%; vertical-align: top; text-align: right;">
                 <table class="details-table">
                     @if(isset($invoice_date) && $invoice_date)
-                    <tr>
-                        <td class="details-label">Invoice Date:</td>
-                        <td class="details-value">{{ \Carbon\Carbon::parse($invoice_date)->format('d M Y') }}</td>
-                    </tr>
+                        <tr>
+                            <td class="details-label">Invoice Date:</td>
+                            <td class="details-value">{{ \Carbon\Carbon::parse($invoice_date)->format('d M Y') }}</td>
+                        </tr>
                     @endif
                     @if(isset($due_date) && $due_date)
-                    <tr>
-                        <td class="details-label">Due Date:</td>
-                        <td class="details-value">{{ \Carbon\Carbon::parse($due_date)->format('d M Y') }}</td>
-                    </tr>
+                        <tr>
+                            <td class="details-label">Due Date:</td>
+                            <td class="details-value">{{ \Carbon\Carbon::parse($due_date)->format('d M Y') }}</td>
+                        </tr>
                     @endif
                     <tr>
                         <td class="details-label">Place of Supply:</td>
                         <td class="details-value">{{ $place_of_supply ?? 'West Bengal' }}</td>
                     </tr>
                     @if(isset($is_ledger) && $is_ledger)
-                    <tr>
-                        <td colspan="2" style="padding-top: 5px;">
-                            <div style="border: 1.5px solid #d32f2f; padding: 3px 6px; background-color: #fff;">
-                                <table style="width: 100%; border-collapse: collapse; margin: 0;">
-                                    <tr>
-                                        <td style="text-align: left; font-weight: bold; color: #d32f2f; font-size: 11px; width: 55%; padding: 0; white-space: nowrap;">Remaining Balance:</td>
-                                        <td style="text-align: right; font-weight: bold; color: #d32f2f; font-size: 11px; width: 45%; padding: 0; white-space: nowrap;"><span class="currency-symbol">{{ $currency_symbol }}</span> {{ number_format($remainingBalance, 2) }}</td>
-                                    </tr>
-                                </table>
-                            </div>
-                        </td>
-                    </tr>
+                        <tr>
+                            <td colspan="2" style="padding-top: 5px;">
+                                <div style="border: 1.5px solid #d32f2f; padding: 3px 6px; background-color: #fff;">
+                                    <table style="width: 100%; border-collapse: collapse; margin: 0;">
+                                        <tr>
+                                            <td
+                                                style="text-align: left; font-weight: bold; color: #d32f2f; font-size: 11px; width: 55%; padding: 0; white-space: nowrap;">
+                                                Remaining Balance:</td>
+                                            <td
+                                                style="text-align: right; font-weight: bold; color: #d32f2f; font-size: 11px; width: 45%; padding: 0; white-space: nowrap;">
+                                                <span class="currency-symbol">{{ $currency_symbol }}</span>
+                                                {{ number_format($remainingBalance, 2) }}
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </td>
+                        </tr>
                     @endif
                 </table>
             </td>
@@ -412,28 +421,29 @@
                     {{-- Skip installment rows entirely in Ledger PDF --}}
                     @continue
                 @endif
-            <tr>
-                <td class="text-center">{{ $paymentRowNum++ }}</td>
-                <td class="item-desc">
-                    {{ $item['desc'] }}<br>
-                    @if(isset($item['subtext']))
-                        <span class="item-subtext">{{ $item['subtext'] }}</span>
-                    @endif
-                </td>
-                <td class="text-right item-value">
-                    @if(isset($item['price']) && $item['price'] !== null)
-                        <span class="currency-symbol">{{ $currency_symbol }}</span> {{ number_format($item['price'], 2) }}
-                    @endif
-                </td>
-                <td class="text-center">
-                    {{ $item['qty'] ?? '' }}
-                </td>
-                <td class="text-right item-value">
-                    @if(isset($item['price']) && $item['price'] !== null)
-                        <span class="currency-symbol">{{ $currency_symbol }}</span> {{ number_format($item['price'] * ($item['qty'] ?? 1), 2) }}
-                    @endif
-                </td>
-            </tr>
+                <tr>
+                    <td class="text-center">{{ $paymentRowNum++ }}</td>
+                    <td class="item-desc">
+                        {{ $item['desc'] }}<br>
+                        @if(isset($item['subtext']))
+                            <span class="item-subtext">{{ $item['subtext'] }}</span>
+                        @endif
+                    </td>
+                    <td class="text-right item-value">
+                        @if(isset($item['price']) && $item['price'] !== null)
+                            <span class="currency-symbol">{{ $currency_symbol }}</span> {{ number_format($item['price'], 2) }}
+                        @endif
+                    </td>
+                    <td class="text-center">
+                        {{ $item['qty'] ?? '' }}
+                    </td>
+                    <td class="text-right item-value">
+                        @if(isset($item['price']) && $item['price'] !== null)
+                            <span class="currency-symbol">{{ $currency_symbol }}</span>
+                            {{ number_format($item['price'] * ($item['qty'] ?? 1), 2) }}
+                        @endif
+                    </td>
+                </tr>
             @endforeach
         </tbody>
     </table>
@@ -450,11 +460,12 @@
         <tr>
             <!-- Bank Details -->
             <td class="bank-details" style="width: 35%;">
-                <div class="bank-details-title">Bank Details:</div>
+                <!-- <div class="bank-details-title">Bank Details:</div>
                 <div><span class="bank-label">Bank:</span> <span class="bank-value">{{ $bank_name }}</span></div>
-                <div><span class="bank-label">Account #:</span> <span class="bank-value">{{ $bank_account }}</span></div>
+                <div><span class="bank-label">Account #:</span> <span class="bank-value">{{ $bank_account }}</span>
+                </div>
                 <div><span class="bank-label">IFSC:</span> <span class="bank-value">{{ $bank_ifsc }}</span></div>
-                <div><span class="bank-label">Branch:</span> <span class="bank-value">{{ $bank_branch }}</span></div>
+                <div><span class="bank-label">Branch:</span> <span class="bank-value">{{ $bank_branch }}</span></div> -->
             </td>
 
             <!-- Middle Empty Spacer -->
@@ -467,23 +478,31 @@
                 <table class="totals-table">
                     <tr>
                         <td class="details-label" style="text-align: left;">Subtotal</td>
-                        <td class="text-right"><span class="currency-symbol">{{ $currency_symbol }}</span> {{ number_format($subtotal, 2) }}</td>
+                        <td class="text-right"><span class="currency-symbol">{{ $currency_symbol }}</span>
+                            {{ number_format($subtotal, 2) }}</td>
                     </tr>
                     @foreach($selected_taxes as $tax)
-                    <tr>
-                        <td class="details-label" style="text-align: left;">{{ $tax['name'] }} ({{ $tax['rate'] }}%)</td>
-                        <td class="text-right"><span class="currency-symbol">{{ $currency_symbol }}</span> {{ number_format($tax['amount'], 2) }}</td>
-                    </tr>
+                        <tr>
+                            <td class="details-label" style="text-align: left;">{{ $tax['name'] }} ({{ $tax['rate'] }}%)
+                            </td>
+                            <td class="text-right"><span class="currency-symbol">{{ $currency_symbol }}</span>
+                                {{ number_format($tax['amount'], 2) }}</td>
+                        </tr>
                     @endforeach
                     <tr class="total-row">
                         <td style="text-align: left;">Total (Inc. Tax)</td>
-                        <td class="text-right"><span class="currency-symbol">{{ $currency_symbol }}</span> {{ number_format($grand_total, 2) }}</td>
+                        <td class="text-right"><span class="currency-symbol">{{ $currency_symbol }}</span>
+                            {{ number_format($grand_total, 2) }}</td>
                     </tr>
                     @if(isset($is_ledger) && $is_ledger)
-                    <tr>
-                        <td class="details-label" style="text-align: left; padding-top: 8px; padding-bottom: 8px;">Total Paid Amount</td>
-                        <td class="text-right" style="padding-top: 8px; padding-bottom: 8px; font-weight: bold; color: #2e7d32;"><span class="currency-symbol">{{ $currency_symbol }}</span> {{ number_format($paidTotal, 2) }}</td>
-                    </tr>
+                        <tr>
+                            <td class="details-label" style="text-align: left; padding-top: 8px; padding-bottom: 8px;">Total
+                                Paid Amount</td>
+                            <td class="text-right"
+                                style="padding-top: 8px; padding-bottom: 8px; font-weight: bold; color: #2e7d32;"><span
+                                    class="currency-symbol">{{ $currency_symbol }}</span> {{ number_format($paidTotal, 2) }}
+                            </td>
+                        </tr>
                     @endif
                 </table>
             </td>
@@ -492,7 +511,8 @@
 
     <!-- Amount in Words -->
     <div class="amount-in-words">
-        Total amount (in words): <strong><span class="currency-symbol">{{ $currency_symbol }}</span> {{ $grand_total_words }}</strong>
+        Total amount (in words): <strong><span class="currency-symbol">{{ $currency_symbol }}</span>
+            {{ $grand_total_words }}</strong>
     </div>
 
     <!-- Notes & Terms -->
@@ -521,4 +541,5 @@
         Authorized Signatory
     </div>
 </body>
+
 </html>

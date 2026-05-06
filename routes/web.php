@@ -39,25 +39,26 @@ Route::middleware('auth')->group(function () {
     // Task Management
     Route::resource('tasks', \App\Http\Controllers\TaskController::class);
 
-    // Project Management
-    Route::get('/projects/settings', [\App\Http\Controllers\ProjectController::class, 'settings'])->name('projects.settings');
-    Route::post('/projects/settings', [\App\Http\Controllers\ProjectController::class, 'saveSettings'])->name('projects.settings.save');
-    Route::get('/projects/invoices', [\App\Http\Controllers\ProjectController::class, 'invoices'])->name('projects.invoices');
-    Route::get('/projects/invoices/{id}/download', [\App\Http\Controllers\ProjectController::class, 'downloadInvoice'])->name('projects.invoices.download');
-    Route::post('/projects/invoices/generate', [\App\Http\Controllers\ProjectController::class, 'generateInvoice'])->name('projects.invoices.generate');
-    Route::post('/projects/payments', [\App\Http\Controllers\ProjectController::class, 'storePayment'])->name('projects.payments.store');
-    Route::get('/projects/{project}/ledger', [\App\Http\Controllers\ProjectController::class, 'downloadLedger'])->name('projects.ledger');
-    Route::post('/projects/{project}/generate-invoice', [\App\Http\Controllers\ProjectController::class, 'generatePaymentInvoice'])->name('projects.generate-invoice');
-    Route::resource('projects', \App\Http\Controllers\ProjectController::class);
+    // Project Management - Admin and Manager only
+    Route::middleware('role:Admin|Manager')->group(function () {
+        Route::get('/projects/settings', [\App\Http\Controllers\ProjectController::class, 'settings'])->name('projects.settings');
+        Route::post('/projects/settings', [\App\Http\Controllers\ProjectController::class, 'saveSettings'])->name('projects.settings.save');
+        Route::get('/projects/invoices', [\App\Http\Controllers\ProjectController::class, 'invoices'])->name('projects.invoices');
+        Route::get('/projects/invoices/{id}/download', [\App\Http\Controllers\ProjectController::class, 'downloadInvoice'])->name('projects.invoices.download');
+        Route::post('/projects/invoices/generate', [\App\Http\Controllers\ProjectController::class, 'generateInvoice'])->name('projects.invoices.generate');
+        Route::post('/projects/payments', [\App\Http\Controllers\ProjectController::class, 'storePayment'])->name('projects.payments.store');
+        Route::get('/projects/{project}/ledger', [\App\Http\Controllers\ProjectController::class, 'downloadLedger'])->name('projects.ledger');
+        Route::post('/projects/{project}/generate-invoice', [\App\Http\Controllers\ProjectController::class, 'generatePaymentInvoice'])->name('projects.generate-invoice');
+        Route::resource('projects', \App\Http\Controllers\ProjectController::class);
+    });
 
     // Call Logs - nested under clients
     Route::get('/clients/{client}/call-logs', [CallLogController::class, 'clientIndex'])->name('clients.call-logs.index');
     Route::get('/clients/{client}/call-logs/create', [CallLogController::class, 'create'])->name('clients.call-logs.create');
     Route::post('/clients/{client}/call-logs', [CallLogController::class, 'store'])->name('clients.call-logs.store');
 
-    // Admin and Manager can access user management and reports
+    // User Management - Admin and Manager only
     Route::middleware('role:Admin|Manager')->group(function () {
-        // User Management
         Route::get('/users', [\App\Http\Controllers\UserController::class, 'index'])->name('users.index');
         Route::get('/users/create', [\App\Http\Controllers\UserController::class, 'create'])->name('users.create');
         Route::post('/users', [\App\Http\Controllers\UserController::class, 'store'])->name('users.store');
@@ -65,17 +66,17 @@ Route::middleware('auth')->group(function () {
         Route::get('/users/{user}/edit', [\App\Http\Controllers\UserController::class, 'edit'])->name('users.edit');
         Route::patch('/users/{user}', [\App\Http\Controllers\UserController::class, 'update'])->name('users.update');
         Route::delete('/users/{user}', [\App\Http\Controllers\UserController::class, 'destroy'])->name('users.destroy');
-
-        // Reports (Controller not implemented yet)
-        // Route::get('/reports', [\App\Http\Controllers\ReportController::class, 'index'])->name('reports.index');
-
-        // Call Logs - All logs view and management
-        Route::get('/call-logs', [CallLogController::class, 'index'])->name('call-logs.index');
-        Route::get('/call-logs/{callLog}', [CallLogController::class, 'show'])->name('call-logs.show');
-        Route::get('/call-logs/{callLog}/edit', [CallLogController::class, 'edit'])->name('call-logs.edit');
-        Route::patch('/call-logs/{callLog}', [CallLogController::class, 'update'])->name('call-logs.update');
-        Route::delete('/call-logs/{callLog}', [CallLogController::class, 'destroy'])->name('call-logs.destroy');
     });
+
+    // Reports (Controller not implemented yet)
+    // Route::get('/reports', [\App\Http\Controllers\ReportController::class, 'index'])->name('reports.index');
+
+    // Call Logs - All logs view and management - accessible to all authenticated roles
+    Route::get('/call-logs', [CallLogController::class, 'index'])->name('call-logs.index');
+    Route::get('/call-logs/{callLog}', [CallLogController::class, 'show'])->name('call-logs.show');
+    Route::get('/call-logs/{callLog}/edit', [CallLogController::class, 'edit'])->name('call-logs.edit');
+    Route::patch('/call-logs/{callLog}', [CallLogController::class, 'update'])->name('call-logs.update');
+    Route::delete('/call-logs/{callLog}', [CallLogController::class, 'destroy'])->name('call-logs.destroy');
 });
 
 require __DIR__ . '/auth.php';

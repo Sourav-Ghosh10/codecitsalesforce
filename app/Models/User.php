@@ -109,6 +109,24 @@ class User extends Authenticatable
     }
 
     /**
+     * Check if user can access the Projects section.
+     * Only Administrator and Manager roles are allowed.
+     */
+    public function canAccessProjects(): bool
+    {
+        return $this->isAdmin() || $this->isManager();
+    }
+
+    /**
+     * Check if user can access the Users section.
+     * Only Administrator and Manager roles are allowed.
+     */
+    public function canManageUsers(): bool
+    {
+        return $this->isAdmin() || $this->isManager();
+    }
+
+    /**
      * Get role label
      */
     public function getRoleLabelAttribute(): string
