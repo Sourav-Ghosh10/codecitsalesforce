@@ -1,4 +1,5 @@
 <html>
+
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <style>
@@ -356,9 +357,11 @@
             <td style="width: 65%;">
                 <span class="section-label">Bill To:</span>
                 <div><strong>{{ $customer_name }}</strong></div>
-                @if($customer_company) <div>{{ $customer_company }}</div> @endif
+                @if($customer_company)
+                <div>{{ $customer_company }}</div> @endif
                 <div>{!! nl2br(e($customer_address)) !!}</div>
-                @if($customer_gst) <div>GSTIN: {{ $customer_gst }}</div> @endif
+                @if($customer_gst)
+                <div>GSTIN: {{ $customer_gst }}</div> @endif
             </td>
             <td class="invoice-details-cell" style="width: 35%; vertical-align: top; text-align: right;">
                 <table class="details-table">
@@ -367,10 +370,10 @@
                         <td class="details-value">{{ \Carbon\Carbon::parse($invoice_date)->format('d M Y') }}</td>
                     </tr>
                     @if($due_date)
-                    <tr>
-                        <td class="details-label">Due Date:</td>
-                        <td class="details-value">{{ \Carbon\Carbon::parse($due_date)->format('d M Y') }}</td>
-                    </tr>
+                        <tr>
+                            <td class="details-label">Due Date:</td>
+                            <td class="details-value">{{ \Carbon\Carbon::parse($due_date)->format('d M Y') }}</td>
+                        </tr>
                     @endif
                     <tr>
                         <td class="details-label">Place of Supply:</td>
@@ -401,18 +404,18 @@
         </thead>
         <tbody>
             @foreach($items as $index => $item)
-            <tr>
-                <td class="text-center">{{ $index + 1 }}</td>
-                <td class="item-desc">
-                    {{ $item['desc'] }}<br>
-                    @if(isset($item['subtext']))
-                        <span class="item-subtext">{{ $item['subtext'] }}</span>
-                    @endif
-                </td>
-                <td class="text-right item-value">{{ number_format($item['price'], 2) }}</td>
-                <td class="text-center">{{ $item['qty'] }}</td>
-                <td class="text-right item-value">{{ number_format($item['price'] * $item['qty'], 2) }}</td>
-            </tr>
+                <tr>
+                    <td class="text-center">{{ $index + 1 }}</td>
+                    <td class="item-desc">
+                        {{ $item['desc'] }}<br>
+                        @if(isset($item['subtext']))
+                            <span class="item-subtext">{{ $item['subtext'] }}</span>
+                        @endif
+                    </td>
+                    <td class="text-right item-value">{{ number_format($item['price'], 2) }}</td>
+                    <td class="text-center">{{ $item['qty'] }}</td>
+                    <td class="text-right item-value">{{ number_format($item['price'] * $item['qty'], 2) }}</td>
+                </tr>
             @endforeach
         </tbody>
     </table>
@@ -422,37 +425,42 @@
         <tr>
             <!-- Bank Details -->
             <td class="bank-details" style="width: 35%;">
-                <div class="bank-details-title">Bank Details:</div>
+                <!-- <div class="bank-details-title">Bank Details:</div>
                 <div><span class="bank-label">Bank:</span> <span class="bank-value">{{ $bank_name }}</span></div>
                 <div><span class="bank-label">Account #:</span> <span class="bank-value">{{ $bank_account }}</span></div>
                 <div><span class="bank-label">IFSC:</span> <span class="bank-value">{{ $bank_ifsc }}</span></div>
-                <div><span class="bank-label">Branch:</span> <span class="bank-value">{{ $bank_branch }}</span></div>
+                <div><span class="bank-label">Branch:</span> <span class="bank-value">{{ $bank_branch }}</span></div> -->
             </td>
 
             <!-- Middle Empty Spacer -->
-            <td style="width: 30%;">
+            <!-- <td style="width: 30%;">
                 &nbsp;
-            </td>
+            </td> -->
 
             <!-- Totals Table -->
             <td class="totals-section" style="width: 35%;">
                 <table class="totals-table">
                     <tr>
                         <td class="details-label" style="text-align: left;">Subtotal</td>
-                        <td class="text-right"><span class="currency-symbol">{{ $currency_symbol }}</span> {{ number_format($subtotal, 2) }}</td>
+                        <td class="text-right"><span class="currency-symbol">{{ $currency_symbol }}</span>
+                            {{ number_format($subtotal, 2) }}</td>
                     </tr>
                     @foreach($selected_taxes as $tax)
-                    <tr>
-                        <td class="details-label" style="text-align: left;">{{ $tax['name'] }} ({{ $tax['rate'] }}%)</td>
-                        <td class="text-right"><span class="currency-symbol">{{ $currency_symbol }}</span> {{ number_format($tax['amount'], 2) }}</td>
-                    </tr>
+                        <tr>
+                            <td class="details-label" style="text-align: left;">{{ $tax['name'] }} ({{ $tax['rate'] }}%)
+                            </td>
+                            <td class="text-right"><span class="currency-symbol">{{ $currency_symbol }}</span>
+                                {{ number_format($tax['amount'], 2) }}</td>
+                        </tr>
                     @endforeach
                     <tr class="total-row">
                         <td style="text-align: left;">Total (Inc. Tax)</td>
-                        <td class="text-right"><span class="currency-symbol">{{ $currency_symbol }}</span> {{ number_format($grand_total, 2) }}</td>
+                        <td class="text-right"><span class="currency-symbol">{{ $currency_symbol }}</span>
+                            {{ number_format($grand_total, 2) }}</td>
                     </tr>
                     <tr>
-                        <td colspan="2" class="text-right" style="color: #2e7d32; font-weight: bold; padding-top: 10px; padding-bottom: 10px;">
+                        <td colspan="2" class="text-right"
+                            style="color: #2e7d32; font-weight: bold; padding-top: 10px; padding-bottom: 10px;">
                             [ PAYMENT STATUS: PAID IN FULL ]
                         </td>
                     </tr>
@@ -492,4 +500,5 @@
         Authorized Signatory
     </div>
 </body>
+
 </html>
