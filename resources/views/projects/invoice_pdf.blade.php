@@ -333,7 +333,7 @@
     <table class="header-table">
         <tr>
             <td style="width: 60%;">
-                @if($logoBase64)
+                @if ($logoBase64)
                     <img src="data:image/png;base64,{{ $logoBase64 }}" class="logo-img" alt="Company Logo">
                 @endif
                 <div class="company-details">
@@ -357,7 +357,7 @@
             <td style="width: 65%;">
                 <span class="section-label">Bill To:</span>
                 <div><strong>{{ $customer_name }}</strong></div>
-                @if($customer_company)
+                @if ($customer_company)
                 <div>{{ $customer_company }}</div> @endif
                 <div>{!! nl2br(e($customer_address)) !!}</div>
                 @if($customer_gst)
@@ -369,7 +369,7 @@
                         <td class="details-label">Invoice Date:</td>
                         <td class="details-value">{{ \Carbon\Carbon::parse($invoice_date)->format('d M Y') }}</td>
                     </tr>
-                    @if($due_date)
+                    @if ($due_date)
                         <tr>
                             <td class="details-label">Due Date:</td>
                             <td class="details-value">{{ \Carbon\Carbon::parse($due_date)->format('d M Y') }}</td>
@@ -408,7 +408,7 @@
                     <td class="text-center">{{ $index + 1 }}</td>
                     <td class="item-desc">
                         {{ $item['desc'] }}<br>
-                        @if(isset($item['subtext']))
+                        @if (isset($item['subtext']))
                             <span class="item-subtext">{{ $item['subtext'] }}</span>
                         @endif
                     </td>
