@@ -604,15 +604,8 @@ class ProjectController extends Controller
         }
 
         // Global sequential invoice number: CI-MMDDYY-XXX
-        $lastInvoice = Invoice::orderBy('created_at', 'desc')->orderBy('id', 'desc')->first();
-        $nextNum = 1;
-
-        if ($lastInvoice) {
-            // Extract the number after the last dash
-            $parts = explode('-', $lastInvoice->invoice_number);
-            $lastNum = (int) end($parts);
-            $nextNum = $lastNum + 1;
-        }
+        $maxSeq = Invoice::max('invoice_seq') ?? 0;
+        $nextNum = $maxSeq + 1;
 
         // Generate the new invoice number
         $invoiceNumber = 'CI-' . date('mdy') . '-' . str_pad($nextNum, 3, '0', STR_PAD_LEFT);
@@ -620,6 +613,7 @@ class ProjectController extends Controller
         // Record the invoice in the database to ensure the sequence persists
         $invoice = Invoice::create([
             'invoice_number' => $invoiceNumber,
+            'invoice_seq' => $nextNum,
             'invoice_date' => now(),
             'client_name' => $project->client_name,
             'total_amount' => $grand_total,
