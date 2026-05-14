@@ -5,11 +5,22 @@
         paymentInput: 0,
         paymentDate: '{{ date('Y-m-d') }}',
         paymentMethod: '',
+        paymentError: '',
         openPayment(p) {
             this.selectedProject = p;
             this.paymentInput = 0;
             this.paymentMethod = '';
+            this.paymentError = '';
             this.showPaymentModal = true;
+        },
+        submitPayment(event) {
+            if (!this.paymentInput || this.paymentInput <= 0 || !this.paymentMethod.trim()) {
+                this.paymentError = 'Both Collection Amount and Payment Method are mandatory.';
+                event.preventDefault();
+                return false;
+            }
+            this.paymentError = '';
+            return true;
         },
         get gstAmount() {
             let amt = parseFloat(this.paymentInput) || 0;
@@ -68,25 +79,21 @@
         // Find the matching tax name from settings
         $matchedTax = collect($settings->available_taxes)->firstWhere('rate', $taxRateVal);
         $taxTypeName = $matchedTax ? $matchedTax['name'] : ($taxRateVal == 0 ? 'No Tax' : 'GST');
-        $suppCharges = $project->projectAmounts
+        $existingCharges = $project->projectAmounts
             ->filter(fn($a) => !str_contains($a->description, '(Base Amount)') && $a->description !== $project->project_name && !str_starts_with($a->description, 'Payment via'))
-            ->map(fn($a) => [
-                'description' => $a->description,
-                'project_amount' => $a->project_amount,
-                'project_gst' => $a->project_gst,
-                'total_amount' => $a->total_amount,
-            ])
             ->values();
     @endphp
-    <form action="{{ route('projects.update', $project->id) }}" method="POST" x-data="{
+    <form action="{{ route('projects.update', $project->id) }}" method="POST" novalidate x-data="{
         baseAmount: '{{ old('base_amount', $project->base_amount) }}',
         taxRate: '{{ $taxRateVal }}',
         taxType: '{{ $taxTypeName }}',
         currencySymbol: '{{ $project->project_currency }}',
         showSupplementary: false,
-        supplementaryCharges: {{ Illuminate\Support\Js::from($suppCharges) }},
+        supplementaryCharges: [], 
+        existingCharges: {{ Illuminate\Support\Js::from($existingCharges) }},
         suppDesc: '',
         suppBase: '',
+        suppError: '',
         get totalAmount() {
             let base = parseFloat(this.baseAmount) || 0;
             let tax  = parseFloat(this.taxRate) || 0;
@@ -111,7 +118,10 @@
                 });
                 this.suppDesc = '';
                 this.suppBase = '';
+                this.suppError = '';
                 this.showSupplementary = false;
+            } else {
+                this.suppError = 'Both Description and Base Amount are mandatory.';
             }
         },
         removeCharge(index) {
@@ -122,6 +132,15 @@
         @method('PATCH')
 
         <div class="space-y-8">
+            {{-- Global Validation Errors --}}
+            @if ($errors->any())
+                <div class="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 rounded-2xl flex items-center gap-3">
+                    <svg class="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                    </svg>
+                    <span class="text-sm font-bold text-red-600 dark:text-red-400">Please correct the highlighted errors before saving.</span>
+                </div>
+            @endif
 
             {{-- ── Section 1: Client Information ── --}}
             <div
@@ -136,24 +155,32 @@
                         <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5">
                             Client Name <span class="text-red-500">*</span>
                         </label>
-                        <input type="text" name="client_name" value="{{ old('client_name', $project->client_name) }}"
+                        <input type="text" name="client_name" value="{{ old('client_name', $project->client_name) }}" required
+                            oninvalid="this.setCustomValidity('This field is mandatory.')"
+                            oninput="this.setCustomValidity('')"
                             class="w-full px-4 py-2.5 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow">
                         @error('client_name') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
                     </div>
 
                     <div>
                         <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5">Client
-                            Email</label>
+                            Email <span class="text-red-500">*</span></label>
                         <input type="email" name="client_email"
-                            value="{{ old('client_email', $project->client_email) }}"
+                            value="{{ old('client_email', $project->client_email) }}" required
+                            oninvalid="this.setCustomValidity('This field is mandatory.')"
+                            oninput="this.setCustomValidity('')"
                             class="w-full px-4 py-2.5 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow">
+                        @error('client_email') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
                     </div>
 
                     <div>
                         <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5">Phone
-                            Number</label>
-                        <input type="text" name="client_phone" value="{{ old('client_phone', $project->client_phone) }}"
+                            Number <span class="text-red-500">*</span></label>
+                        <input type="text" name="client_phone" value="{{ old('client_phone', $project->client_phone) }}" required
+                            oninvalid="this.setCustomValidity('This field is mandatory.')"
+                            oninput="this.setCustomValidity('')"
                             class="w-full px-4 py-2.5 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow">
+                        @error('client_phone') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
                     </div>
 
                     <div>
@@ -166,24 +193,33 @@
 
                     <div>
                         <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5">Company
-                            Name</label>
+                            Name <span class="text-red-500">*</span></label>
                         <input type="text" name="customer_company"
-                            value="{{ old('customer_company', $project->customer_company) }}"
+                            value="{{ old('customer_company', $project->customer_company) }}" required
+                            oninvalid="this.setCustomValidity('This field is mandatory.')"
+                            oninput="this.setCustomValidity('')"
                             class="w-full px-4 py-2.5 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow">
+                        @error('customer_company') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
                     </div>
 
                     <div>
                         <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5">GST
-                            Number</label>
-                        <input type="text" name="client_gst" value="{{ old('client_gst', $project->client_gst) }}"
+                            Number <span class="text-red-500">*</span></label>
+                        <input type="text" name="client_gst" value="{{ old('client_gst', $project->client_gst) }}" required
+                            oninvalid="this.setCustomValidity('This field is mandatory.')"
+                            oninput="this.setCustomValidity('')"
                             class="w-full px-4 py-2.5 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl text-sm font-mono text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow">
+                        @error('client_gst') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
                     </div>
 
                     <div class="md:col-span-2">
                         <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5">Client
-                            Address</label>
-                        <textarea name="client_address" rows="2"
+                            Address <span class="text-red-500">*</span></label>
+                        <textarea name="client_address" rows="2" required
+                            oninvalid="this.setCustomValidity('This field is mandatory.')"
+                            oninput="this.setCustomValidity('')"
                             class="w-full px-4 py-2.5 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow resize-none">{{ old('client_address', $project->client_address) }}</textarea>
+                        @error('client_address') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
                     </div>
                 </div>
             </div>
@@ -348,10 +384,35 @@
                     </button>
                 </div>
 
+                {{-- Existing Charges History (Read Only) --}}
+                <div class="space-y-3 mb-8">
+                    <template x-for="(charge, index) in existingCharges" :key="'existing-'+index">
+                        <div class="flex items-center justify-between p-4 bg-gray-50/30 dark:bg-slate-800/50 rounded-2xl border border-gray-100 dark:border-slate-700/50 opacity-75">
+                            <div class="flex items-center gap-4">
+                                <div class="w-10 h-10 rounded-xl bg-gray-100 dark:bg-slate-700 flex items-center justify-center text-gray-400 dark:text-slate-500 font-bold text-lg">
+                                    <span x-text="currencySymbol"></span>
+                                </div>
+                                <div>
+                                    <div class="text-sm font-bold text-gray-600 dark:text-gray-400" x-text="charge.description"></div>
+                                    <div class="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wider">
+                                        Previously Added
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-sm font-black text-gray-500 dark:text-gray-400">
+                                    <span x-text="currencySymbol"></span><span x-text="charge.total_amount"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+
+                {{-- New Charges to be Added --}}
                 <div class="space-y-3 mb-6">
-                    <template x-for="(charge, index) in supplementaryCharges" :key="index">
+                    <template x-for="(charge, index) in supplementaryCharges" :key="'new-'+index">
                         <div
-                            class="flex items-center justify-between p-4 bg-gray-50/50 dark:bg-slate-700 rounded-2xl border border-gray-200/50 dark:border-slate-600 group hover:shadow-md transition-all">
+                            class="flex items-center justify-between p-4 bg-indigo-50/30 dark:bg-indigo-900/10 rounded-2xl border border-indigo-100 dark:border-indigo-900/30 group hover:shadow-md transition-all">
                             <div class="flex items-center gap-4">
                                 <div
                                     class="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-black text-lg">
@@ -360,10 +421,8 @@
                                 <div>
                                     <div class="text-sm font-bold text-gray-900 dark:text-white"
                                         x-text="charge.description"></div>
-                                    <div class="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        Base: <span x-text="currencySymbol"></span><span x-text="charge.project_amount || charge.base_amount"></span> +
-                                        <span x-text="taxType"></span>: <span x-text="currencySymbol"></span><span
-                                            x-text="charge.project_gst || charge.gst_amount"></span>
+                                    <div class="text-[10px] text-indigo-500 dark:text-indigo-400 uppercase tracking-wider font-bold">
+                                        To be added
                                     </div>
                                 </div>
                             </div>
@@ -385,9 +444,9 @@
                             <input type="hidden" :name="'supplementary_charges['+index+'][description]'"
                                 :value="charge.description">
                             <input type="hidden" :name="'supplementary_charges['+index+'][base_amount]'"
-                                :value="charge.project_amount || charge.base_amount">
+                                :value="charge.project_amount">
                             <input type="hidden" :name="'supplementary_charges['+index+'][gst_amount]'"
-                                :value="charge.project_gst || charge.gst_amount">
+                                :value="charge.project_gst">
                             <input type="hidden" :name="'supplementary_charges['+index+'][total_amount]'"
                                 :value="charge.total_amount">
                         </div>
@@ -419,15 +478,21 @@
                             <div class="md:col-span-1">
                                 <label
                                     class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Description:</label>
-                                <input type="text" x-model="suppDesc" placeholder="e.g. Server Hosting"
-                                    class="w-full px-4 py-3 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-xl text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 transition-shadow outline-none">
+                                <input type="text" x-model="suppDesc" placeholder="e.g. Server Hosting" required
+                                    oninvalid="this.setCustomValidity('This field is mandatory.')"
+                                    oninput="this.setCustomValidity('')"
+                                    :class="suppError && !suppDesc ? 'border-red-500 ring-1 ring-red-500' : 'border-gray-200 dark:border-slate-700'"
+                                    class="w-full px-4 py-3 bg-gray-50 dark:bg-slate-900 border rounded-xl text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 transition-shadow outline-none">
                             </div>
                             <div>
                                 <label
                                     class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Base
                                     Amount (<span x-text="currencySymbol"></span>):</label>
-                                <input type="number" x-model="suppBase" step="0.01" placeholder="0.00"
-                                    class="w-full px-4 py-3 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-xl text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 transition-shadow outline-none">
+                                <input type="number" x-model="suppBase" step="0.01" placeholder="0.00" required
+                                    oninvalid="this.setCustomValidity('This field is mandatory.')"
+                                    oninput="this.setCustomValidity('')"
+                                    :class="suppError && !suppBase ? 'border-red-500 ring-1 ring-red-500' : 'border-gray-200 dark:border-slate-700'"
+                                    class="w-full px-4 py-3 bg-gray-50 dark:bg-slate-900 border rounded-xl text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 transition-shadow outline-none">
                             </div>
                             <div>
                                 <label
@@ -440,6 +505,12 @@
                                 </div>
                             </div>
                         </div>
+                        <template x-if="suppError">
+                            <div class="mb-6 px-4 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 rounded-xl flex items-center gap-2">
+                                <svg class="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                                <span class="text-xs font-bold text-red-600 dark:text-red-400" x-text="suppError"></span>
+                            </div>
+                        </template>
                         <div class="flex items-center gap-3">
                             <button type="button" @click="addCharge()"
                                 class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold rounded-lg transition-all shadow-sm active:scale-95">
@@ -599,22 +670,37 @@
                 </div>
             </div>
 
-            {{-- Form Actions --}}
-            <div class="flex items-center justify-end gap-3 mt-8">
-                <a href="{{ route('projects.show', $project->id) }}"
-                    class="px-5 py-2.5 text-sm font-semibold text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
-                    Cancel
-                </a>
-                <button type="submit"
-                    class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold transition-colors shadow-lg shadow-indigo-600/25 flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                    </svg>
-                    Update Project
-                </button>
-            </div>
+        <div class="flex items-center justify-end gap-3 mt-12 pb-12">
+            <a href="{{ route('projects.show', $project->id) }}"
+                class="px-5 py-2.5 text-sm font-semibold text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
+                Cancel
+            </a>
+            <button type="submit"
+                class="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-bold transition-all shadow-xl shadow-indigo-600/25 flex items-center gap-2 active:scale-95 group">
+                <svg class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                </svg>
+                Update Project Details
+            </button>
         </div>
     </form>
+
+    <script>
+        // Custom script to scroll to the first invalid field when clicking submit
+        document.addEventListener('DOMContentLoaded', function() {
+            const forms = document.querySelectorAll('form');
+            forms.forEach(form => {
+                form.addEventListener('invalid', function(e) {
+                    e.preventDefault();
+                    const firstInvalid = form.querySelector(':invalid');
+                    if (firstInvalid) {
+                        firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        setTimeout(() => firstInvalid.focus(), 500);
+                    }
+                }, true);
+            });
+        });
+    </script>
     @include('projects.partials.payment-modal')
     </div>
 </x-app-layout>

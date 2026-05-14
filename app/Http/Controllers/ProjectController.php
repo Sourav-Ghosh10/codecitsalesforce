@@ -350,12 +350,12 @@ class ProjectController extends Controller
         $data = $request->validate([
             'project_name' => 'required|string|max:255',
             'client_name' => 'required|string|max:255',
-            'client_email' => 'nullable|email|max:255',
-            'client_phone' => 'nullable|string|max:255',
+            'client_email' => 'required|email|max:255',
+            'client_phone' => 'required|string|max:255',
             'customer_alt_phone' => 'nullable|string|max:255',
-            'customer_company' => 'nullable|string|max:255',
-            'client_gst' => 'nullable|string|max:255',
-            'client_address' => 'nullable|string',
+            'customer_company' => 'required|string|max:255',
+            'client_gst' => 'required|string|max:255',
+            'client_address' => 'required|string',
             'base_amount' => 'required|numeric|min:0',
             'tax_rate' => 'required|numeric|min:0|max:100',
             'project_currency' => 'required|string|max:10',
@@ -444,12 +444,12 @@ class ProjectController extends Controller
         $data = $request->validate([
             'project_name' => 'required|string|max:255',
             'client_name' => 'required|string|max:255',
-            'client_email' => 'nullable|email|max:255',
-            'client_phone' => 'nullable|string|max:255',
+            'client_email' => 'required|email|max:255',
+            'client_phone' => 'required|string|max:255',
             'customer_alt_phone' => 'nullable|string|max:255',
-            'customer_company' => 'nullable|string|max:255',
-            'client_gst' => 'nullable|string|max:255',
-            'client_address' => 'nullable|string',
+            'customer_company' => 'required|string|max:255',
+            'client_gst' => 'required|string|max:255',
+            'client_address' => 'required|string',
             'base_amount' => 'required|numeric|min:0',
             'tax_rate' => 'required|numeric|min:0|max:100',
             'project_currency' => 'required|string|max:10',
@@ -461,35 +461,28 @@ class ProjectController extends Controller
             'supplementary_charges.*.total_amount' => 'required|numeric|min:0',
         ]);
 
-        $data['total_amount'] = $data['base_amount'] * (1 + ($data['tax_rate'] / 100));
+        // Calculate NEW Grand Total (Current Total + New Supplementary Charges)
+        // Note: Base amount and tax rate are readonly in UI to preserve history consistency
+        $newChargesTotal = 0;
+        if (!empty($data['supplementary_charges'])) {
+            foreach ($data['supplementary_charges'] as $charge) {
+                $newChargesTotal += (float)$charge['total_amount'];
+            }
+        }
+        
+        $data['total_amount'] = (float)$project->total_amount + $newChargesTotal;
 
-        // 1. Update project core info
+        // 1. Update project core info (Name, Status, Client info, etc.)
         $project->update($data);
 
-        // 2. Update or Create base amount record in ledger
-
-        ProjectAmount::where('project_id', $id)
-            ->delete();
-        ProjectAmount::create([
-            'project_id' => $id,
-            'project_amount' => $data['base_amount'],
-            'project_gst' => $data['total_amount'] - $data['base_amount'],
-            'total_amount' => $data['total_amount'],
-            'description' => $data['project_name'] . ' (Base Amount)',
-        ]);
-
-
-        // 3. Sync supplementary charges
-        // Deleting non-base and non-payment records to recreate them
-
-
+        // 2. Add NEW supplementary charges to ledger
         if (!empty($data['supplementary_charges'])) {
             foreach ($data['supplementary_charges'] as $charge) {
                 ProjectAmount::create([
                     'project_id' => $project->id,
-                    'project_amount' => $charge['base_amount'],
-                    'project_gst' => $charge['gst_amount'],
-                    'total_amount' => $charge['total_amount'],
+                    'project_amount' => (float)$charge['base_amount'],
+                    'project_gst' => (float)$charge['gst_amount'],
+                    'total_amount' => (float)$charge['total_amount'],
                     'description' => $charge['description'],
                 ]);
             }

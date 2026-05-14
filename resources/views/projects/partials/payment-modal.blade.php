@@ -34,7 +34,7 @@
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
         </button>
 
-        <form action="{{ route('projects.payments.store') }}" method="POST" class="p-12">
+        <form action="{{ route('projects.payments.store') }}" method="POST" class="p-12" @submit="submitPayment($event)">
             @csrf
             <input type="hidden" name="project_id" :value="selectedProject?.id">
             
@@ -61,10 +61,12 @@
 
             {{-- Form Body: Symmetrical Row --}}
             <div class="space-y-12 mb-12">
-                <div class="flex gap-12">
+                <div class="flex" style="gap: 32px;">
                     <div class="flex-1">
                         <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-3 block ml-1">Payment Date</label>
-                        <div class="glass-input rounded-xl transition-all" style="overflow: hidden; height: 62px;">
+                        <div class="glass-input rounded-xl transition-all" 
+                             :class="paymentError && (!paymentInput || paymentInput <= 0) ? 'border-red-500 ring-1 ring-red-500' : ''"
+                             style="overflow: hidden; height: 62px;">
                             <input type="date" name="payment_date" x-model="paymentDate"
                                 style="background: transparent; border: none; width: 100%; height: 100%; padding: 0 18px; outline: none !important;"
                                 class="text-sm font-medium text-slate-900 dark:text-white [color-scheme:light] dark:[color-scheme:dark]">
@@ -72,9 +74,13 @@
                     </div>
                     <div class="flex-1">
                         <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-3 block ml-1">Collection Amount</label>
-                        <div class="glass-input rounded-xl transition-all" style="overflow: hidden; display: flex; align-items: center; height: 62px;">
+                        <div class="glass-input rounded-xl transition-all" 
+                             :class="paymentError && (!paymentInput || paymentInput <= 0) ? 'border-red-500 ring-1 ring-red-500' : ''"
+                             style="overflow: hidden; display: flex; align-items: center; height: 62px;">
                             <span class="pl-5 text-lg font-bold text-slate-400 dark:text-slate-500" x-text="selectedProject?.project_currency || '₹'"></span>
-                            <input type="number" name="amount" x-model="paymentInput" autofocus placeholder="0.00"
+                            <input type="number" name="amount" x-model="paymentInput" autofocus placeholder="0.00" required
+                                oninvalid="this.setCustomValidity('This field is mandatory.')"
+                                oninput="this.setCustomValidity('')"
                                 style="background: transparent !important; border: none !important; width: 100%; height: 100%; padding: 0 12px; outline: none !important;"
                                 class="text-xl font-bold text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-800">
                         </div>
@@ -85,11 +91,21 @@
                 <div style="margin-top: 24px;">
                     <div class="w-full">
                         <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-3 block ml-1">Method / Transaction ID Details</label>
-                        <div class="glass-input rounded-2xl transition-all" style="overflow: hidden; display: flex; align-items: center; height: 86px;">
-                            <input type="text" name="payment_mode" x-model="paymentMethod" placeholder="Type here: UPI, Bank, or Transaction ID..."
+                        <div class="glass-input rounded-2xl transition-all" 
+                             :class="paymentError && !paymentMethod.trim() ? 'border-red-500 ring-1 ring-red-500' : ''"
+                             style="overflow: hidden; display: flex; align-items: center; height: 86px;">
+                            <input type="text" name="payment_mode" x-model="paymentMethod" placeholder="Type here: UPI, Bank, or Transaction ID..." required
+                                oninvalid="this.setCustomValidity('This field is mandatory.')"
+                                oninput="this.setCustomValidity('')"
                                 style="background: transparent !important; border: none !important; width: 100%; height: 100%; padding: 0 24px; outline: none !important;"
                                 class="text-xl font-bold text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-700">
                         </div>
+                        <template x-if="paymentError">
+                            <div class="mt-4 px-4 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 rounded-xl flex items-center gap-2">
+                                <svg class="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                                <span class="text-xs font-bold text-red-600 dark:text-red-400" x-text="paymentError"></span>
+                            </div>
+                        </template>
                     </div>
                     
                     <div style="margin-top: 24px;">

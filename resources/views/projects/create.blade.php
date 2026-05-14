@@ -26,7 +26,7 @@
         $firstTax = $settings->available_taxes[0] ?? ['name' => 'GST', 'rate' => 18];
         $firstSymbol = $settings->available_currencies[0]['symbol'] ?? '₹';
     @endphp
-    <form action="{{ route('projects.store') }}" method="POST" x-data="{
+    <form action="{{ route('projects.store') }}" method="POST" novalidate x-data="{
         baseAmount: '',
         taxRate: {{ $firstTax['rate'] }},
         taxType: '{{ $firstTax['name'] }}',
@@ -40,6 +40,15 @@
         @csrf
 
         <div class="space-y-8">
+            {{-- Global Validation Errors --}}
+            @if ($errors->any())
+                <div class="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 rounded-2xl flex items-center gap-3">
+                    <svg class="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                    </svg>
+                    <span class="text-sm font-bold text-red-600 dark:text-red-400">Please correct the highlighted errors before saving.</span>
+                </div>
+            @endif
 
             {{-- ── Section 1: Client Information ── --}}
             <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-7">
@@ -48,26 +57,34 @@
                     <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5">
                         Client Name <span class="text-red-500">*</span>
                     </label>
-                    <input type="text" name="client_name" value="{{ old('client_name') }}" placeholder="e.g. Sourav Das"
+                    <input type="text" name="client_name" value="{{ old('client_name') }}" placeholder="e.g. Sourav Das" required
+                        oninvalid="this.setCustomValidity('This field is mandatory.')"
+                        oninput="this.setCustomValidity('')"
                         class="w-full px-4 py-2.5 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow">
                     @error('client_name') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
                 </div>
 
                 <div>
                     <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5">
-                        Client Email
+                        Client Email <span class="text-red-500">*</span>
                     </label>
                     <input type="email" name="client_email" value="{{ old('client_email') }}"
-                        placeholder="e.g. client@company.com"
+                        placeholder="e.g. client@company.com" required
+                        oninvalid="this.setCustomValidity('This field is mandatory.')"
+                        oninput="this.setCustomValidity('')"
                         class="w-full px-4 py-2.5 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow">
+                    @error('client_email') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
                 </div>
 
                 <div>
                     <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5">Phone
-                        Number</label>
+                        Number <span class="text-red-500">*</span></label>
                     <input type="text" name="client_phone" value="{{ old('client_phone') }}"
-                        placeholder="+91 98765 43210"
+                        placeholder="+91 98765 43210" required
+                        oninvalid="this.setCustomValidity('This field is mandatory.')"
+                        oninput="this.setCustomValidity('')"
                         class="w-full px-4 py-2.5 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow">
+                    @error('client_phone') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
                 </div>
 
                 <div>
@@ -80,25 +97,34 @@
 
                 <div>
                     <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5">Company
-                        Name</label>
+                        Name <span class="text-red-500">*</span></label>
                     <input type="text" name="customer_company" value="{{ old('customer_company') }}"
-                        placeholder="e.g. Basak Textiles Ltd"
+                        placeholder="e.g. Basak Textiles Ltd" required
+                        oninvalid="this.setCustomValidity('This field is mandatory.')"
+                        oninput="this.setCustomValidity('')"
                         class="w-full px-4 py-2.5 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow">
+                    @error('customer_company') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
                 </div>
 
                 <div>
                     <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5">GST
-                        Number</label>
+                        Number <span class="text-red-500">*</span></label>
                     <input type="text" name="client_gst" value="{{ old('client_gst') }}"
-                        placeholder="e.g. 19ABCDE1234F1Z5"
+                        placeholder="e.g. 19ABCDE1234F1Z5" required
+                        oninvalid="this.setCustomValidity('This field is mandatory.')"
+                        oninput="this.setCustomValidity('')"
                         class="w-full px-4 py-2.5 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl text-sm font-mono text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow">
+                    @error('client_gst') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
                 </div>
 
                 <div class="md:col-span-2">
                     <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5">Client
-                        Address</label>
-                    <textarea name="client_address" rows="2" placeholder="Full address including city, state and PIN…"
+                        Address <span class="text-red-500">*</span></label>
+                    <textarea name="client_address" rows="2" placeholder="Full address including city, state and PIN…" required
+                        oninvalid="this.setCustomValidity('This field is mandatory.')"
+                        oninput="this.setCustomValidity('')"
                         class="w-full px-4 py-2.5 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow resize-none">{{ old('client_address') }}</textarea>
+                    @error('client_address') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
                 </div>
             </div>
         </div>
@@ -400,8 +426,7 @@
         </div>
         --}}
 
-        {{-- Form Actions --}}
-        <div class="flex items-center justify-end gap-3">
+        <div class="flex items-center justify-end gap-3 mt-12 pb-12">
             <a href="{{ route('projects.index') }}"
                 class="px-5 py-2.5 text-sm font-semibold text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
                 Cancel
@@ -411,13 +436,29 @@
                 Save as Draft
             </button>
             <button type="submit" name="action" value="save"
-                class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold transition-colors shadow-lg shadow-indigo-600/25 flex items-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                class="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-bold transition-all shadow-xl shadow-indigo-600/25 flex items-center gap-2 active:scale-95 group">
+                <svg class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
                 </svg>
-                Save Project
+                Create Project Details
             </button>
         </div>
-        </div>
     </form>
+
+    <script>
+        // Custom script to scroll to the first invalid field when clicking submit
+        document.addEventListener('DOMContentLoaded', function() {
+            const forms = document.querySelectorAll('form');
+            forms.forEach(form => {
+                form.addEventListener('invalid', function(e) {
+                    e.preventDefault();
+                    const firstInvalid = form.querySelector(':invalid');
+                    if (firstInvalid) {
+                        firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        setTimeout(() => firstInvalid.focus(), 500);
+                    }
+                }, true);
+            });
+        });
+    </script>
 </x-app-layout>

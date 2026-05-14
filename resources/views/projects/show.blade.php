@@ -31,11 +31,22 @@
         paymentInput: 0,
         paymentDate: '{{ date('Y-m-d') }}',
         paymentMethod: '',
+        paymentError: '',
         openPayment(p) {
             this.selectedProject = p;
             this.paymentInput = 0;
             this.paymentMethod = '';
+            this.paymentError = '';
             this.showPaymentModal = true;
+        },
+        submitPayment(event) {
+            if (!this.paymentInput || this.paymentInput <= 0 || !this.paymentMethod.trim()) {
+                this.paymentError = 'Both Collection Amount and Payment Method are mandatory.';
+                event.preventDefault();
+                return false;
+            }
+            this.paymentError = '';
+            return true;
         },
         get gstAmount() {
             let amt = parseFloat(this.paymentInput) || 0;
